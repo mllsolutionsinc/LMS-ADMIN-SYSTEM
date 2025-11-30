@@ -1,18 +1,16 @@
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 
 export function AdminLayout() {
-  const navigate = useNavigate();
+  // Check authentication status from sessionStorage
+  // We use sessionStorage so the user has to log in every time they open a new session
+  const isAuthenticated = sessionStorage.getItem("isAuthenticated") === "true";
 
-  useEffect(() => {
-    // Check authentication status
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (isAuthenticated !== "true") {
-      navigate("/login");
-    }
-  }, [navigate]);
+  if (!isAuthenticated) {
+    // Redirect to login immediately if not authenticated
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>

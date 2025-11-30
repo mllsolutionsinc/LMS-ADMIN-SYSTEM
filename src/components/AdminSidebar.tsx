@@ -1,5 +1,6 @@
-import { LayoutDashboard, BookOpen, Users, ClipboardList, GraduationCap } from "lucide-react";
+import { LayoutDashboard, BookOpen, Users, ClipboardList, GraduationCap, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -21,7 +23,15 @@ const menuItems = [
 
 export function AdminSidebar() {
   const { state } = useSidebar();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
+
+  const handleLogout = () => {
+    // Clear session storage to log the user out
+    sessionStorage.removeItem("isAuthenticated");
+    // Redirect to login page
+    navigate("/login");
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -58,7 +68,7 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <div className="mt-auto p-4 border-t border-sidebar-border">
+        <div className="mt-auto p-4 border-t border-sidebar-border flex flex-col gap-2">
           <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
             <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-accent-foreground font-semibold">
               A
@@ -70,6 +80,16 @@ export function AdminSidebar() {
               </div>
             )}
           </div>
+          
+          <Button
+            variant="ghost"
+            className={`w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 ${collapsed ? "px-0 justify-center" : ""}`}
+            onClick={handleLogout}
+            title="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span className="ml-2">Logout</span>}
+          </Button>
         </div>
       </SidebarContent>
     </Sidebar>
