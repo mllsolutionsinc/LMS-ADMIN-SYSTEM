@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { Lock, Mail, GraduationCap } from "lucide-react";
 
+import { loginAdmin } from "@/services/auth";
+
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,23 +24,30 @@ export default function Login() {
     }
   }, [navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    // Simulate API authentication
-    setTimeout(() => {
-      if (email && password) {
-        // Save auth token to sessionStorage (cleared when browser/tab closes)
-        sessionStorage.setItem("isAuthenticated", "true");
-        toast.success("Welcome back, Administrator");
-        navigate("/");
-      } else {
-        toast.error("Please enter your credentials");
-      }
-      setIsLoading(false);
-    }, 800);
-  };
+  try {
+    const { token, admin } = await loginAdmin(email, password);
+   console.log(admin);
+    // Save JWT token (sessionStorage = cleared on tab close)
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("admin", JSON.stringify(admin));
+    sessionStorage.setItem("isAuthenticated", "true");
+
+    toast.success(`Welcome back, ${admin.first_name}`);
+
+    navigate("/");
+
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err.message || "Invalid credentials");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative overflow-hidden">
