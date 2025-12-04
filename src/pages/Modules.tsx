@@ -1,4 +1,5 @@
-import { useState } from "react";
+// src/pages/Modules.tsx
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,39 +23,97 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
-// Mock data
-const mockModules = [
-  { id: 1, code: "CS101", name: "Introduction to Programming", description: "Basic programming concepts using Python" },
-  { id: 2, code: "MATH201", name: "Advanced Mathematics", description: "Calculus and linear algebra fundamentals" },
-  { id: 3, code: "PHY101", name: "Physics Fundamentals", description: "Classical mechanics and thermodynamics" },
-  { id: 4, code: "ENG202", name: "Technical Writing", description: "Professional communication and documentation" },
-  { id: 5, code: "DATA301", name: "Data Science Intro", description: "Statistics, ML basics, and data analysis" },
-];
+import { fetchModules, createModule, deleteModule } from "@/services/modules";
+
+type ModuleRow = {
+  MODULE_ID?: number;
+  MODULE_CODE?: string;
+  MODULE_NAME?: string;
+  DESCRIPTION?: string;
+  // fallback lowercase keys if your backend returns lowercase
+  module_id?: number;
+  module_code?: string;
+  module_name?: string;
+  description?: string;
+};
 
 export default function Modules() {
-  const [modules, setModules] = useState(mockModules);
+  const [modules, setModules] = useState<ModuleRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({ code: "", name: "", description: "" });
 
-  const filteredModules = modules.filter(
-    (module) =>
-      module.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      module.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCreate = () => {
-    if (formData.code && formData.name) {
-      setModules([...modules, { id: modules.length + 1, ...formData }]);
-      setFormData({ code: "", name: "", description: "" });
-      setIsCreateOpen(false);
+  // load modules from backend
+  const loadModules = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchModules();
+      setModules(data);
+    } catch (err: any) {
+      console.error("Load modules error", err);
+      toast.error(err?.message || "Failed to load modules");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = (id: number) => {
-    setModules(modules.filter((m) => m.id !== id));
+  useEffect(() => {
+    loadModules();
+  }, []);
+
+  // create new module
+  const handleCreate = async () => {
+    if (!formData.code.trim() || !formData.name.trim()) {
+      toast.error("Module code and name are required");
+      return;
+    }
+    setCreating(true);
+    try {
+      await createModule({
+        code: formData.code.trim(),
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+      });
+      toast.success("Module created");
+      setFormData({ code: "", name: "", description: "" });
+      setIsCreateOpen(false);
+      await loadModules();
+    } catch (err: any) {
+      console.error("Create module error", err);
+      toast.error(err?.message || "Failed to create module");
+    } finally {
+      setCreating(false);
+    }
   };
+
+  // delete module
+  const handleDelete = async (id?: number) => {
+    if (!id) return;
+    if (!confirm("Delete this module? This cannot be undone.")) return;
+    try {
+      await deleteModule(id);
+      toast.success("Module deleted");
+      await loadModules();
+    } catch (err: any) {
+      console.error("Delete module error", err);
+      toast.error(err?.message || "Failed to delete module");
+    }
+  };
+
+  // helper to read module fields regardless of case
+  const get = (m: ModuleRow, keyUpper: string, keyLower: string) =>
+    (m as any)[keyUpper] ?? (m as any)[keyLower] ?? "";
+
+  const filteredModules = modules.filter((module) => {
+    const code = (get(module, "MODULE_CODE", "module_code") as string).toLowerCase();
+    const name = (get(module, "MODULE_NAME", "module_name") as string).toLowerCase();
+    const q = searchQuery.toLowerCase();
+    return code.includes(q) || name.includes(q);
+  });
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -110,8 +169,12 @@ export default function Modules() {
                 <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                  Create Module
+                <Button
+                  onClick={handleCreate}
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  disabled={creating}
+                >
+                  {creating ? "Creating..." : "Create Module"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -121,7 +184,7 @@ export default function Modules() {
 
       <div className="flex-1 overflow-auto p-6">
         <div className="bg-card rounded-lg border border-border shadow-sm">
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -142,36 +205,49 @@ export default function Modules() {
                 <TableHead className="font-display text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {filteredModules.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    Loading modules...
+                  </TableCell>
+                </TableRow>
+              ) : filteredModules.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     No modules found. Create your first module to get started.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredModules.map((module) => (
-                  <TableRow key={module.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium">{module.code}</TableCell>
-                    <TableCell>{module.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{module.description}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="hover:bg-accent/10 hover:text-accent">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => handleDelete(module.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredModules.map((module) => {
+                  const id = get(module, "MODULE_ID", "module_id");
+                  const code = get(module, "MODULE_CODE", "module_code");
+                  const name = get(module, "MODULE_NAME", "module_name");
+                  const desc = get(module, "DESCRIPTION", "description");
+                  return (
+                    <TableRow key={id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-medium">{code}</TableCell>
+                      <TableCell>{name}</TableCell>
+                      <TableCell className="text-muted-foreground">{desc}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="hover:bg-accent/10 hover:text-accent">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => handleDelete(Number(id))}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

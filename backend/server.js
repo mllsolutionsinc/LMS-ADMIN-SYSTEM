@@ -3,6 +3,7 @@ const express = require('express');
 const { init, closePool } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const moduleRoutes= require('./routes/moduleRoutes.js');
 
 const app = express();
 app.use(express.json()); // FIXED
@@ -10,6 +11,7 @@ app.use(express.json()); // FIXED
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.use('/api/auth', authRoutes);
+app.use("/api/modules", moduleRoutes);
 
 app.use(errorHandler);
 
