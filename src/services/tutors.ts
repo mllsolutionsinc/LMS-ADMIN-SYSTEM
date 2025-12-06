@@ -2,6 +2,7 @@ export interface TutorData {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
 }
 
 export async function registerTutor(data: TutorData) {

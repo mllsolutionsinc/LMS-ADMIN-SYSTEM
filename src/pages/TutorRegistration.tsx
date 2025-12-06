@@ -7,16 +7,18 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
 import { toast } from "sonner";
-import { UserPlus, Mail, User } from "lucide-react";
+import { UserPlus, Mail, User,Lock } from "lucide-react";
 import { registerTutor, TutorData } from "../services/tutors";
 
 export default function TutorRegistration() {
   const navigate = useNavigate();
+  //const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<TutorData>({
     firstName: "",
     lastName: "",
     email: "",
+    password: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +122,25 @@ export default function TutorRegistration() {
                       </div>
                     </div>
                   </div>
+                  <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-foreground">Password</Label>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="pl-10 bg-background/50 focus:bg-background border-input transition-colors text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+              </div>
+
+
                 </div>
 
               </CardContent>
