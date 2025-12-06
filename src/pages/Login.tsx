@@ -16,6 +16,8 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+
+  
   useEffect(() => {
     // If already logged in, immediately redirect to dashboard
     const isAuthenticated = sessionStorage.getItem("isAuthenticated");

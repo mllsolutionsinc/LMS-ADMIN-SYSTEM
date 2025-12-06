@@ -1,5 +1,5 @@
-import { LayoutDashboard, BookOpen, Users, ClipboardList, GraduationCap, LogOut } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
+import { LayoutDashboard, BookOpen, ClipboardList, GraduationCap, LogOut, UserPlus } from "lucide-react";
+import { NavLink } from "./NavLink";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -11,14 +11,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+} from "./ui/sidebar";
+import { Button } from "./ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Modules", url: "/modules", icon: BookOpen },
   { title: "Module Assignments", url: "/assignments", icon: ClipboardList },
   { title: "Enrollments", url: "/enrollments", icon: GraduationCap },
+  { title: "Register Tutor", url: "/tutors/register", icon: UserPlus }, // New Menu Item
 ];
 
 export function AdminSidebar() {

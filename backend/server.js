@@ -3,15 +3,17 @@ const express = require('express');
 const { init, closePool } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
-const moduleRoutes= require('./routes/moduleRoutes.js');
+const moduleRoutes = require('./routes/moduleRoutes.js');
+const tutorRoutes = require('./routes/tutorRoutes.js'); // Import new routes
 
 const app = express();
-app.use(express.json()); // FIXED
+app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.use('/api/auth', authRoutes);
 app.use("/api/modules", moduleRoutes);
+app.use("/api/tutors", tutorRoutes); // Register new routes
 
 app.use(errorHandler);
 
